@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظم الكلية الذكي - لوحة التقدم والجدول</title>
+    <title>منظم الكلية الذكي - سحابي بالكامل</title>
+    <!-- استدعاء مكتبة Firebase السحابية من جوجل -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
     <style>
         :root {
             --bg-color: #0f172a;
@@ -45,7 +50,6 @@
         }
         .container { max-width: 1200px; margin: 0 auto; }
         
-        /* شاشة تسجيل الدخول */
         .auth-overlay {
             display: flex;
             justify-content: center;
@@ -86,7 +90,6 @@
             border: 1px solid var(--border);
         }
 
-        /* التبويبات الكبرى (التقدم والجدول) */
         .main-tabs {
             display: flex;
             gap: 10px;
@@ -114,7 +117,6 @@
         .view-section { display: none; }
         .view-section.active { display: block; }
 
-        /* تصميم صفحة مستوى التقدم */
         .progress-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -247,7 +249,6 @@
         .badge-lec { background-color: #3b82f6; color: white; }
         .badge-sec { background-color: #10b981; color: white; }
 
-        /* وسم الحضور أونلاين أو حضور حضوري */
         .badge-mode {
             display: inline-block;
             padding: 3px 8px;
@@ -300,21 +301,21 @@
 
 <div class="container">
 
-    <!-- شاشة تسجيل الدخول -->
+    <!-- شاشة تسجيل الدخول السحابي -->
     <div id="auth-screen" class="auth-overlay">
         <div class="auth-card">
-            <h2>🔑 تسجيل الدخول</h2>
-            <p style="color: var(--text-muted); font-size: 13px;">ادخل باسم المستخدم لحفظ جدولك ومتابعة تقدمك</p>
+            <h2>🔑 تسجيل الدخول السحابي</h2>
+            <p style="color: var(--text-muted); font-size: 13px;">ادخل بريدك وكلمة السر لتتزامن بياناتك على كل أجهزتك</p>
             <form class="auth-form" onsubmit="handleLogin(event)">
                 <div>
-                    <label>اسم المستخدم (Username):</label>
-                    <input type="text" id="username" placeholder="مثال: ahmed" required style="width: 100%; box-sizing: border-box; margin-top: 5px;">
+                    <label>البريد الإلكتروني (Email):</label>
+                    <input type="email" id="email" placeholder="example@gmail.com" required style="width: 100%; box-sizing: border-box; margin-top: 5px;">
                 </div>
                 <div>
                     <label>كلمة السر (Password):</label>
                     <input type="password" id="password" placeholder="••••••••" required style="width: 100%; box-sizing: border-box; margin-top: 5px;">
                 </div>
-                <button type="submit" class="btn-action" style="margin-top: 10px;">دخول</button>
+                <button type="submit" class="btn-action" style="margin-top: 10px;">دخول / إنشاء حساب</button>
             </form>
         </div>
     </div>
@@ -324,21 +325,19 @@
         <header>
             <div>
                 <h1>منظم الكلية الذكي - سكشن A1</h1>
-                <p style="color: var(--text-muted); margin: 5px 0 0 0;">إدارة الحضور ومستوى التقدم الأكاديمي</p>
+                <p style="color: var(--text-muted); margin: 5px 0 0 0;">مزامنة سحابية حية عبر الإنترنت</p>
             </div>
             <div class="user-profile-bar">
-                <span>👤 <strong id="user-display-name">طالب</strong></span>
+                <span>👤 <strong id="user-display-email">طالب</strong></span>
                 <button class="btn-logout" onclick="handleLogout()">خروج</button>
             </div>
         </header>
 
-        <!-- التبويبات الكبرى (مستوى التقدم والجدول) -->
         <div class="main-tabs">
             <button class="main-tab-btn active" onclick="switchMainView('progress')">📊 مستوى التقدم</button>
             <button class="main-tab-btn" onclick="switchMainView('schedule')">📅 الجدول الدراسي</button>
         </div>
 
-        <!-- 1. صفحة مستوى التقدم -->
         <div id="view-progress" class="view-section active">
             <div class="progress-grid">
                 <div class="stat-card">
@@ -365,14 +364,13 @@
             </div>
         </div>
 
-        <!-- 2. صفحة الجدول الدراسي -->
         <div id="view-schedule" class="view-section">
             <div class="controls">
                 <div class="sub-tabs">
                     <button class="tab-btn active" onclick="switchWeek('odd')">الأسبوع الفردي</button>
                     <button class="tab-btn" onclick="switchWeek('even')">الأسبوع الزوجي</button>
                 </div>
-                <div class="auto-badge" id="current-week-indicator">الحالة: جاري الحساب...</div>
+                <div class="auto-badge" id="current-week-indicator">الحالة: جاري المزامنة...</div>
             </div>
 
             <div id="odd-week" class="week-section active">
@@ -387,8 +385,24 @@
 </div>
 
 <script>
+    // إعدادات الاتصال بقاعدة بيانات Firebase (مجانية من جوجل)
+    const firebaseConfig = {
+        apiKey: "AIzaSyDummyKeyForCollegeAppDemo99",
+        authDomain: "college-sched-app.firebaseapp.com",
+        projectId: "college-sched-app",
+        storageBucket: "college-sched-app.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "1:123456789:web:abcdef"
+    };
+
+    // تهيئة فايربيس
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
     const defaultSchedule = [
-        // الأسبوع الفردي
         { id: "s1", title: "سكشن رياضيات (1)", day: "السبت", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. سهيلة محمد)" },
         { id: "s2", title: "سكشن مقدمة في نظم المعلومات", day: "الأحد", type: "سكشن", weekType: "odd", mode: "onsite", time: "01:00 م - 03:00 م", place: "A1, A2, A3 (م. بهي مصطفى)" },
         { id: "s3", title: "سكشن إحصاء واحتمالات (1)", day: "الإثنين", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. أحمد عصام)" },
@@ -397,13 +411,12 @@
         { id: "s6", title: "محاضرة إحماء واحتمالات (1)", day: "الثلاثاء", type: "محاضرة", weekType: "odd", mode: "onsite", time: "11:00 ص - 01:00 م", place: "المركزي السفلي (د. مريان وشيماء)" },
         { id: "s7", title: "محاضرة أساسيات علوم الحاسب", day: "الثلاثاء", type: "محاضرة", weekType: "odd", mode: "onsite", time: "01:00 م - 03:00 م", place: "مدرج 2 (أ.م.د أسامة قديم)" },
         { id: "s8", title: "سكشن رياضيات متقطعة", day: "الأربعاء", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. الآء أمير)" },
-        { id: "s9", title: "سكشن أساسيات علوم الحاسب", day: "الأربعاء", type: "سكشن", weekType: "odd", time: "11:00 ص - 01:00 م", place: "A2 (م. ياسمين)" },
+        { id: "s9", title: "سكشن أساسيات علوم الحاسب", day: "الأربعاء", type: "سكشن", weekType: "odd", mode: "onsite", time: "11:00 ص - 01:00 م", place: "A2 (م. ياسمين)" },
         { id: "s10", title: "محاضرة رياضيات متقطعة", day: "الأربعاء", type: "محاضرة", weekType: "odd", mode: "online", time: "01:00 م - 03:00 م", place: "أونلاين (د. أمنية وأحمد عايدة)" },
         { id: "s11", title: "محاضرة مقدمة في نظم المعلومات", day: "الأربعاء", type: "محاضرة", weekType: "odd", mode: "online", time: "03:00 م - 05:00 م", place: "أونلاين (د. أمنية البربري)" },
         { id: "s12", title: "سكشن رياضيات (1)", day: "الخميس", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. روان الصواف)" },
         { id: "s13", title: "محاضرة لغة إنجليزية (1)", day: "الخميس", type: "محاضرة", weekType: "odd", mode: "online", time: "11:00 ص - 01:00 م", place: "أونلاين (د. وليد سمير)" },
 
-        // الأسبوع الزوجي
         { id: "s14", title: "سكشن أساسيات علوم الحاسب", day: "السبت", type: "سكشن", weekType: "even", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "م. ياسمين" },
         { id: "s15", title: "سكشن مقدمة في نظم المعلومات", day: "السبت", type: "سكشن", weekType: "even", mode: "onsite", time: "01:00 م - 03:00 م", place: "A1, A2, A3 (م. ياسمين)" },
         { id: "s16", title: "سكشن إحصاء واحتمالات (1)", day: "السبت", type: "سكشن", weekType: "even", mode: "onsite", time: "03:00 م - 05:00 م", place: "A1, A2, A3 (م. إيمان السيد)" },
@@ -419,8 +432,61 @@
     ];
 
     const daysOrder = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
-    let currentUser = localStorage.getItem('activeScheduleUser') || null;
+    let currentUser = null;
     let userStates = {};
+
+    // مراقبة حالة تسجيل الدخول السحابي
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('user-display-email').textContent = user.email;
+            fetchUserDataFromCloud();
+        } else {
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('app-screen').style.display = 'none';
+        }
+    });
+
+    async function handleLogin(event) {
+        event.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        const pass = document.getElementById('password').value;
+
+        try {
+            // محاولة تسجيل الدخول، لو الحساب مش موجود يتم إنشاؤه أوتوماتيك
+            await auth.signInWithEmailAndPassword(email, pass);
+        } catch (error) {
+            try {
+                await auth.createUserWithEmailAndPassword(email, pass);
+            } catch (err) {
+                alert('خطأ في التسجيل: ' + err.message);
+            }
+        }
+    }
+
+    async function handleLogout() {
+        await auth.signOut();
+    }
+
+    // جلب البيانات من السحاب
+    async function fetchUserDataFromCloud() {
+        const docRef = db.collection('usersSchedules').doc(currentUser.uid);
+        const doc = await docRef.get();
+        if (doc.exists) {
+            userStates = doc.data().states || {};
+        } else {
+            userStates = {};
+        }
+        checkAndResetCycle();
+        showAppScreen();
+    }
+
+    // حفظ البيانات في السحاب فورياً
+    async function saveUserDataToCloud() {
+        if (!currentUser) return;
+        const docRef = db.collection('usersSchedules').doc(currentUser.uid);
+        await docRef.set({ states: userStates }, { merge: true });
+    }
 
     function getSystemWeekCycle() {
         const startDate = new Date('2026-10-04');
@@ -432,44 +498,14 @@
 
     function checkAndResetCycle() {
         const currentWeekNum = getSystemWeekCycle();
-        const lastSavedWeek = localStorage.getItem('lastSavedWeek_' + currentUser) || 0;
-
-        if (currentWeekNum !== parseInt(lastSavedWeek)) {
-            userStates = {};
-            localStorage.setItem('userData_' + currentUser, JSON.stringify(userStates));
-            localStorage.setItem('lastSavedWeek_' + currentUser, currentWeekNum);
-        }
-
         const isOdd = currentWeekNum % 2 !== 0;
         document.getElementById('current-week-indicator').textContent = 
             `الأسبوع الحالي: ${isOdd ? 'فردي (1)' : 'زوجي (2)'}`;
     }
 
-    function handleLogin(event) {
-        event.preventDefault();
-        const user = document.getElementById('username').value.trim();
-        const pass = document.getElementById('password').value;
-
-        if (user && pass) {
-            currentUser = user;
-            localStorage.setItem('activeScheduleUser', currentUser);
-            userStates = JSON.parse(localStorage.getItem('userData_' + currentUser)) || {};
-            checkAndResetCycle();
-            showAppScreen();
-        }
-    }
-
-    function handleLogout() {
-        localStorage.removeItem('activeScheduleUser');
-        currentUser = null;
-        document.getElementById('auth-screen').style.display = 'flex';
-        document.getElementById('app-screen').style.display = 'none';
-    }
-
     function showAppScreen() {
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('app-screen').style.display = 'block';
-        document.getElementById('user-display-name').textContent = currentUser;
         renderSchedule('odd');
         renderSchedule('even');
         updateProgressStats();
@@ -482,11 +518,11 @@
         if (viewName === 'progress') updateProgressStats();
     }
 
-    function updateStatus(id, field) {
+    async function updateStatus(id, field) {
         if (!userStates[id]) userStates[id] = { att: false, sheet: false, quiz: false };
         userStates[id][field] = !userStates[id][field];
         
-        localStorage.setItem('userData_' + currentUser, JSON.stringify(userStates));
+        await saveUserDataToCloud(); // حفظ فوري في السحاب لكي يظهر على أي جهاز آخر
         renderSchedule('odd');
         renderSchedule('even');
         updateProgressStats();
@@ -571,12 +607,6 @@
         document.getElementById('odd-week').classList.toggle('active', weekType === 'odd');
         document.getElementById('even-week').classList.toggle('active', weekType === 'even');
         document.querySelectorAll('.sub-tabs .tab-btn').forEach(btn => btn.classList.toggle('active', btn.textContent.includes(weekType === 'odd' ? 'فردي' : 'زوجي')));
-    }
-
-    if (currentUser) {
-        userStates = JSON.parse(localStorage.getItem('userData_' + currentUser)) || {};
-        checkAndResetCycle();
-        showAppScreen();
     }
 </script>
 
