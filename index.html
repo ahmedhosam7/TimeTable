@@ -322,14 +322,47 @@
 <script>
     const daysOrder = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
     
+    // جدول سكشن A1 الافتراضي
+    const defaultSchedule = [
+        { id: "s1", title: "سكشن رياضيات (1)", day: "السبت", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. سهيلة محمد)" },
+        { id: "s2", title: "سكشن مقدمة في نظم المعلومات", day: "الأحد", type: "سكشن", weekType: "odd", mode: "onsite", time: "01:00 م - 03:00 م", place: "A1, A2, A3 (م. بهي مصطفى)" },
+        { id: "s3", title: "سكشن إحصاء واحتمالات (1)", day: "الإثنين", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. أحمد عصام)" },
+        { id: "s4", title: "سكشن رياضيات متقطعة", day: "الإثنين", type: "سكشن", weekType: "odd", mode: "onsite", time: "11:00 ص - 01:00 م", place: "A1, A2, A3 (م. الآء أمير)" },
+        { id: "s5", title: "محاضرة رياضيات (1)", day: "الثلاثاء", type: "محاضرة", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "المركزي العلوي (د. نانسي الحفناوي)" },
+        { id: "s6", title: "محاضرة إحماء واحتمالات (1)", day: "الثلاثاء", type: "محاضرة", weekType: "odd", mode: "onsite", time: "11:00 ص - 01:00 م", place: "المركزي السفلي (د. مريان وشيماء)" },
+        { id: "s7", title: "محاضرة أساسيات علوم الحاسب", day: "الثلاثاء", type: "محاضرة", weekType: "odd", mode: "onsite", time: "01:00 م - 03:00 م", place: "مدرج 2 (أ.م.د أسامة قديم)" },
+        { id: "s8", title: "سكشن رياضيات متقطعة", day: "الأربعاء", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. الآء أمير)" },
+        { id: "s9", title: "سكشن أساسيات علوم الحاسب", day: "الأربعاء", type: "سكشن", weekType: "odd", mode: "onsite", time: "11:00 ص - 01:00 م", place: "A2 (م. ياسمين)" },
+        { id: "s10", title: "محاضرة رياضيات متقطعة", day: "الأربعاء", type: "محاضرة", weekType: "odd", mode: "online", time: "01:00 م - 03:00 م", place: "أونلاين (د. أمنية وأحمد عايدة)" },
+        { id: "s11", title: "محاضرة مقدمة في نظم المعلومات", day: "الأربعاء", type: "محاضرة", weekType: "odd", mode: "online", time: "03:00 م - 05:00 م", place: "أونلاين (د. أمنية البربري)" },
+        { id: "s12", title: "سكشن رياضيات (1)", day: "الخميس", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. روان الصواف)" },
+        { id: "s13", title: "محاضرة لغة إنجليزية (1)", day: "الخميس", type: "محاضرة", weekType: "odd", mode: "online", time: "11:00 ص - 01:00 م", place: "أونلاين (د. وليد سمير)" },
+
+        { id: "s14", title: "سكشن أساسيات علوم الحاسب", day: "السبت", type: "سكشن", weekType: "even", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "م. ياسمين" },
+        { id: "s15", title: "سكشن مقدمة في نظم المعلومات", day: "السبت", type: "سكشن", weekType: "even", mode: "onsite", time: "01:00 م - 03:00 م", place: "A1, A2, A3 (م. ياسمين)" },
+        { id: "s16", title: "سكشن إحصاء واحتمالات (1)", day: "السبت", type: "سكشن", weekType: "even", mode: "onsite", time: "03:00 م - 05:00 م", place: "A1, A2, A3 (م. إيمان السيد)" },
+        { id: "s17", title: "سكشن رياضيات (1)", day: "الإثنين", type: "سكشن", weekType: "even", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. روان الصواف)" },
+        { id: "s18", title: "محاضرة إحماء واحتمالات (1)", day: "الثلاثاء", type: "محاضرة", weekType: "even", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "مدرج 1 (د. مريان وشيماء)" },
+        { id: "s19", title: "محاضرة رياضيات (1)", day: "الثلاثاء", type: "محاضرة", weekType: "even", mode: "onsite", time: "11:00 ص - 01:00 م", place: "مدرج 2 (د. نانسي الحفناوي)" },
+        { id: "s20", title: "محاضرة أساسيات علوم الحاسب", day: "الثلاثاء", type: "محاضرة", weekType: "even", mode: "onsite", time: "01:00 م - 03:00 م", place: "المركزي السفلي (أ.م.د أسامة قديم)" },
+        { id: "s21", title: "سكشن إحصاء واحتمالات (1)", day: "الأربعاء", type: "سكشن", weekType: "even", mode: "online", time: "09:00 ص - 11:00 ص", place: "أونلاين (م. أحمد عصام)" },
+        { id: "s22", title: "سكشن رياضيات متقطعة", day: "الأربعاء", type: "سكشن", weekType: "even", mode: "onsite", time: "11:00 ص - 01:00 م", place: "مدرج 1 (م. الآء أمير)" },
+        { id: "s23", title: "محاضرة رياضيات متقطعة", day: "الأربعاء", type: "محاضرة", weekType: "even", mode: "onsite", time: "01:00 م - 03:00 م", place: "المركزي العلوي (د. أمنية وأحمد عايدة)" },
+        { id: "s24", title: "محاضرة مقدمة في نظم المعلومات", day: "الأربعاء", type: "محاضرة", weekType: "even", mode: "onsite", time: "03:00 م - 05:00 م", place: "المركزي العلوي (د. أمنية البربري)" },
+        { id: "s25", title: "سكشن أساسيات علوم الحاسب", day: "الخميس", type: "سكشن", weekType: "even", mode: "onsite", time: "11:00 ص - 01:00 م", place: "A3 (م. ياسمين)" }
+    ];
+    
     let scheduleItems = [];
     let userStates = {};
 
     try {
-        scheduleItems = JSON.parse(localStorage.getItem('myCustomSchedule')) || [];
+        scheduleItems = JSON.parse(localStorage.getItem('myCustomSchedule'));
+        if (!scheduleItems || scheduleItems.length === 0) {
+            scheduleItems = defaultSchedule; // لو مفيش جدول متخزن، ينزل جدول A1 أوتوماتيك
+        }
         userStates = JSON.parse(localStorage.getItem('myCustomStates')) || {};
     } catch(e) {
-        scheduleItems = [];
+        scheduleItems = defaultSchedule;
         userStates = {};
     }
 
@@ -381,7 +414,7 @@
     }
 
     function deleteItem(id) {
-        if (confirm('هل تريد الحذف؟')) {
+        if (confirm('هل تريد حذف هذه المادة؟')) {
             scheduleItems = scheduleItems.filter(i => i.id !== id);
             localStorage.setItem('myCustomSchedule', JSON.stringify(scheduleItems));
             renderSchedule('odd');
