@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظم الكلية الذكي - لوحة التقدم والجدول</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --border: #334155;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --online-badge: #eab308;
+            --onsite-badge: #10b981;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-color: #0f172a;
+            --text-muted: #64748b;
+            --accent: #0284c7;
+            --accent-hover: #0369a1;
+            --border: #cbd5e1;
+            --success: #16a34a;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --online-badge: #ca8a04;
+            --onsite-badge: #059669;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            transition: background 0.3s, color 0.3s;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        /* شاشة تسجيل الدخول */
+        .auth-overlay {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+        .auth-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .auth-card h2 { color: var(--accent); margin-bottom: 10px; }
+        .auth-form { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; text-align: right; }
+        .auth-form label { font-size: 14px; color: var(--text-muted); }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        h1 { margin: 0; color: var(--accent); }
+        
+        .user-profile-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--card-bg);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        /* التبويبات الكبرى (التقدم والجدول) */
+        .main-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+        .main-tab-btn {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border);
+            padding: 10px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .main-tab-btn.active {
+            background-color: var(--accent);
+            color: var(--bg-color);
+            border-color: var(--accent);
+        }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        /* تصميم صفحة مستوى التقدم */
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card h3 { margin: 0 0 10px 0; color: var(--text-muted); font-size: 16px; }
+        .stat-number { font-size: 32px; font-weight: bold; color: var(--accent); margin-bottom: 10px; }
+        .progress-bar-container {
+            background: var(--bg-color);
+            border-radius: 10px;
+            height: 12px;
+            width: 100%;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--success);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .sub-tabs { display: flex; gap: 10px; }
+        button.tab-btn {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 2px solid var(--border);
+            padding: 8px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button.tab-btn.active {
+            background-color: var(--accent);
+            color: var(--bg-color);
+            border-color: var(--accent);
+        }
+
+        .auto-badge {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        .day-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .day-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 6px;
+        }
+        .item-list { display: flex; flex-direction: column; gap: 12px; }
+        .schedule-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .item-title { font-weight: bold; font-size: 15px; }
+        .item-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        
+        .checkboxes-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border);
+            font-size: 13px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        .checkbox-label input { width: 16px; height: 16px; cursor: pointer; }
+        .chk-attendance { accent-color: var(--success); }
+        .chk-sheet { accent-color: var(--warning); }
+        .chk-quiz { accent-color: var(--accent); }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 4px;
+            margin-left: 4px;
+            font-weight: bold;
+        }
+        .badge-lec { background-color: #3b82f6; color: white; }
+        .badge-sec { background-color: #10b981; color: white; }
+
+        /* وسم الحضور أونلاين أو حضور حضوري */
+        .badge-mode {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 11px;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .mode-online { background-color: var(--online-badge); color: #000; }
+        .mode-onsite { background-color: var(--onsite-badge); color: #fff; }
+
+        input, select {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--text-color);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .btn-action {
+            background-color: var(--accent);
+            color: var(--bg-color);
+            border: none;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 15px;
+        }
+        .btn-action:hover { background-color: var(--accent-hover); }
+
+        .btn-logout {
+            background: none;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .week-section { display: none; }
+        .week-section.active { display: block; }
+        .empty-msg { color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- شاشة تسجيل الدخول -->
+    <div id="auth-screen" class="auth-overlay">
+        <div class="auth-card">
+            <h2>🔑 تسجيل الدخول</h2>
+            <p style="color: var(--text-muted); font-size: 13px;">ادخل باسم المستخدم لحفظ جدولك ومتابعة تقدمك</p>
+            <form class="auth-form" onsubmit="handleLogin(event)">
+                <div>
+                    <label>اسم المستخدم (Username):</label>
+                    <input type="text" id="username" placeholder="مثال: ahmed" required style="width: 100%; box-sizing: border-box; margin-top: 5px;">
+                </div>
+                <div>
+                    <label>كلمة السر (Password):</label>
+                    <input type="password" id="password" placeholder="••••••••" required style="width: 100%; box-sizing: border-box; margin-top: 5px;">
+                </div>
+                <button type="submit" class="btn-action" style="margin-top: 10px;">دخول</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- الشاشة الرئيسية -->
+    <div id="app-screen" style="display: none;">
+        <header>
+            <div>
+                <h1>منظم الكلية الذكي - سكشن A1</h1>
+                <p style="color: var(--text-muted); margin: 5px 0 0 0;">إدارة الحضور ومستوى التقدم الأكاديمي</p>
+            </div>
+            <div class="user-profile-bar">
+                <span>👤 <strong id="user-display-name">طالب</strong></span>
+                <button class="btn-logout" onclick="handleLogout()">خروج</button>
+            </div>
+        </header>
+
+        <!-- التبويبات الكبرى (مستوى التقدم والجدول) -->
+        <div class="main-tabs">
+            <button class="main-tab-btn active" onclick="switchMainView('progress')">📊 مستوى التقدم</button>
+            <button class="main-tab-btn" onclick="switchMainView('schedule')">📅 الجدول الدراسي</button>
+        </div>
+
+        <!-- 1. صفحة مستوى التقدم -->
+        <div id="view-progress" class="view-section active">
+            <div class="progress-grid">
+                <div class="stat-card">
+                    <h3>نسبة الحضور الإجمالية</h3>
+                    <div class="stat-number" id="stat-att-num">0%</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="bar-att"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>الشيتات المنجزة</h3>
+                    <div class="stat-number" id="stat-sheet-num">0%</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="bar-sheet" style="background-color: var(--warning);"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>الكويزات المجتازة</h3>
+                    <div class="stat-number" id="stat-quiz-num">0%</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="bar-quiz" style="background-color: var(--accent);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. صفحة الجدول الدراسي -->
+        <div id="view-schedule" class="view-section">
+            <div class="controls">
+                <div class="sub-tabs">
+                    <button class="tab-btn active" onclick="switchWeek('odd')">الأسبوع الفردي</button>
+                    <button class="tab-btn" onclick="switchWeek('even')">الأسبوع الزوجي</button>
+                </div>
+                <div class="auto-badge" id="current-week-indicator">الحالة: جاري الحساب...</div>
+            </div>
+
+            <div id="odd-week" class="week-section active">
+                <div class="grid-layout" id="odd-container"></div>
+            </div>
+            <div id="even-week" class="week-section">
+                <div class="grid-layout" id="even-container"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const defaultSchedule = [
+        // الأسبوع الفردي
+        { id: "s1", title: "سكشن رياضيات (1)", day: "السبت", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. سهيلة محمد)" },
+        { id: "s2", title: "سكشن مقدمة في نظم المعلومات", day: "الأحد", type: "سكشن", weekType: "odd", mode: "onsite", time: "01:00 م - 03:00 م", place: "A1, A2, A3 (م. بهي مصطفى)" },
+        { id: "s3", title: "سكشن إحصاء واحتمالات (1)", day: "الإثنين", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. أحمد عصام)" },
+        { id: "s4", title: "سكشن رياضيات متقطعة", day: "الإثنين", type: "سكشن", weekType: "odd", mode: "onsite", time: "11:00 ص - 01:00 م", place: "A1, A2, A3 (م. الآء أمير)" },
+        { id: "s5", title: "محاضرة رياضيات (1)", day: "الثلاثاء", type: "محاضرة", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "المركزي العلوي (د. نانسي الحفناوي)" },
+        { id: "s6", title: "محاضرة إحماء واحتمالات (1)", day: "الثلاثاء", type: "محاضرة", weekType: "odd", mode: "onsite", time: "11:00 ص - 01:00 م", place: "المركزي السفلي (د. مريان وشيماء)" },
+        { id: "s7", title: "محاضرة أساسيات علوم الحاسب", day: "الثلاثاء", type: "محاضرة", weekType: "odd", mode: "onsite", time: "01:00 م - 03:00 م", place: "مدرج 2 (أ.م.د أسامة قديم)" },
+        { id: "s8", title: "سكشن رياضيات متقطعة", day: "الأربعاء", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. الآء أمير)" },
+        { id: "s9", title: "سكشن أساسيات علوم الحاسب", day: "الأربعاء", type: "سكشن", weekType: "odd", time: "11:00 ص - 01:00 م", place: "A2 (م. ياسمين)" },
+        { id: "s10", title: "محاضرة رياضيات متقطعة", day: "الأربعاء", type: "محاضرة", weekType: "odd", mode: "online", time: "01:00 م - 03:00 م", place: "أونلاين (د. أمنية وأحمد عايدة)" },
+        { id: "s11", title: "محاضرة مقدمة في نظم المعلومات", day: "الأربعاء", type: "محاضرة", weekType: "odd", mode: "online", time: "03:00 م - 05:00 م", place: "أونلاين (د. أمنية البربري)" },
+        { id: "s12", title: "سكشن رياضيات (1)", day: "الخميس", type: "سكشن", weekType: "odd", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. روان الصواف)" },
+        { id: "s13", title: "محاضرة لغة إنجليزية (1)", day: "الخميس", type: "محاضرة", weekType: "odd", mode: "online", time: "11:00 ص - 01:00 م", place: "أونلاين (د. وليد سمير)" },
+
+        // الأسبوع الزوجي
+        { id: "s14", title: "سكشن أساسيات علوم الحاسب", day: "السبت", type: "سكشن", weekType: "even", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "م. ياسمين" },
+        { id: "s15", title: "سكشن مقدمة في نظم المعلومات", day: "السبت", type: "سكشن", weekType: "even", mode: "onsite", time: "01:00 م - 03:00 م", place: "A1, A2, A3 (م. ياسمين)" },
+        { id: "s16", title: "سكشن إحصاء واحتمالات (1)", day: "السبت", type: "سكشن", weekType: "even", mode: "onsite", time: "03:00 م - 05:00 م", place: "A1, A2, A3 (م. إيمان السيد)" },
+        { id: "s17", title: "سكشن رياضيات (1)", day: "الإثنين", type: "سكشن", weekType: "even", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "A1, A2, A3 (م. روان الصواف)" },
+        { id: "s18", title: "محاضرة إحماء واحتمالات (1)", day: "الثلاثاء", type: "محاضرة", weekType: "even", mode: "onsite", time: "09:00 ص - 11:00 ص", place: "مدرج 1 (د. مريان وشيماء)" },
+        { id: "s19", title: "محاضرة رياضيات (1)", day: "الثلاثاء", type: "محاضرة", weekType: "even", mode: "onsite", time: "11:00 ص - 01:00 م", place: "مدرج 2 (د. نانسي الحفناوي)" },
+        { id: "s20", title: "محاضرة أساسيات علوم الحاسب", day: "الثلاثاء", type: "محاضرة", weekType: "even", mode: "onsite", time: "01:00 م - 03:00 م", place: "المركزي السفلي (أ.م.د أسامة قديم)" },
+        { id: "s21", title: "سكشن إحصاء واحتمالات (1)", day: "الأربعاء", type: "سكشن", weekType: "even", mode: "online", time: "09:00 ص - 11:00 ص", place: "أونلاين (م. أحمد عصام)" },
+        { id: "s22", title: "سكشن رياضيات متقطعة", day: "الأربعاء", type: "سكشن", weekType: "even", mode: "onsite", time: "11:00 ص - 01:00 م", place: "مدرج 1 (م. الآء أمير)" },
+        { id: "s23", title: "محاضرة رياضيات متقطعة", day: "الأربعاء", type: "محاضرة", weekType: "even", mode: "onsite", time: "01:00 م - 03:00 م", place: "المركزي العلوي (د. أمنية وأحمد عايدة)" },
+        { id: "s24", title: "محاضرة مقدمة في نظم المعلومات", day: "الأربعاء", type: "محاضرة", weekType: "even", mode: "onsite", time: "03:00 م - 05:00 م", place: "المركزي العلوي (د. أمنية البربري)" },
+        { id: "s25", title: "سكشن أساسيات علوم الحاسب", day: "الخميس", type: "سكشن", weekType: "even", mode: "onsite", time: "11:00 ص - 01:00 م", place: "A3 (م. ياسمين)" }
+    ];
+
+    const daysOrder = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+    let currentUser = localStorage.getItem('activeScheduleUser') || null;
+    let userStates = {};
+
+    function getSystemWeekCycle() {
+        const startDate = new Date('2026-10-04');
+        const now = new Date();
+        const diffTime = Math.abs(now - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return Math.ceil(diffDays / 7);
+    }
+
+    function checkAndResetCycle() {
+        const currentWeekNum = getSystemWeekCycle();
+        const lastSavedWeek = localStorage.getItem('lastSavedWeek_' + currentUser) || 0;
+
+        if (currentWeekNum !== parseInt(lastSavedWeek)) {
+            userStates = {};
+            localStorage.setItem('userData_' + currentUser, JSON.stringify(userStates));
+            localStorage.setItem('lastSavedWeek_' + currentUser, currentWeekNum);
+        }
+
+        const isOdd = currentWeekNum % 2 !== 0;
+        document.getElementById('current-week-indicator').textContent = 
+            `الأسبوع الحالي: ${isOdd ? 'فردي (1)' : 'زوجي (2)'}`;
+    }
+
+    function handleLogin(event) {
+        event.preventDefault();
+        const user = document.getElementById('username').value.trim();
+        const pass = document.getElementById('password').value;
+
+        if (user && pass) {
+            currentUser = user;
+            localStorage.setItem('activeScheduleUser', currentUser);
+            userStates = JSON.parse(localStorage.getItem('userData_' + currentUser)) || {};
+            checkAndResetCycle();
+            showAppScreen();
+        }
+    }
+
+    function handleLogout() {
+        localStorage.removeItem('activeScheduleUser');
+        currentUser = null;
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('app-screen').style.display = 'none';
+    }
+
+    function showAppScreen() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'block';
+        document.getElementById('user-display-name').textContent = currentUser;
+        renderSchedule('odd');
+        renderSchedule('even');
+        updateProgressStats();
+    }
+
+    function switchMainView(viewName) {
+        document.getElementById('view-progress').classList.toggle('active', viewName === 'progress');
+        document.getElementById('view-schedule').classList.toggle('active', viewName === 'schedule');
+        document.querySelectorAll('.main-tab-btn').forEach(btn => btn.classList.toggle('active', btn.textContent.includes(viewName === 'progress' ? 'مستوى التقدم' : 'الجدول')));
+        if (viewName === 'progress') updateProgressStats();
+    }
+
+    function updateStatus(id, field) {
+        if (!userStates[id]) userStates[id] = { att: false, sheet: false, quiz: false };
+        userStates[id][field] = !userStates[id][field];
+        
+        localStorage.setItem('userData_' + currentUser, JSON.stringify(userStates));
+        renderSchedule('odd');
+        renderSchedule('even');
+        updateProgressStats();
+    }
+
+    function updateProgressStats() {
+        const totalItems = defaultSchedule.length;
+        if (totalItems === 0) return;
+
+        let attCount = 0, sheetCount = 0, quizCount = 0;
+        defaultSchedule.forEach(item => {
+            const st = userStates[item.id] || { att: false, sheet: false, quiz: false };
+            if (st.att) attCount++;
+            if (st.sheet) sheetCount++;
+            if (st.quiz) quizCount++;
+        });
+
+        const attPct = Math.round((attCount / totalItems) * 100);
+        const sheetPct = Math.round((sheetCount / totalItems) * 100);
+        const quizPct = Math.round((quizCount / totalItems) * 100);
+
+        document.getElementById('stat-att-num').textContent = attPct + '%';
+        document.getElementById('bar-att').style.width = attPct + '%';
+
+        document.getElementById('stat-sheet-num').textContent = sheetPct + '%';
+        document.getElementById('bar-sheet').style.width = sheetPct + '%';
+
+        document.getElementById('stat-quiz-num').textContent = quizPct + '%';
+        document.getElementById('bar-quiz').style.width = quizPct + '%';
+    }
+
+    function renderSchedule(week) {
+        const containerId = week === 'odd' ? 'odd-container' : 'even-container';
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+
+        daysOrder.forEach(dayName => {
+            const dayItems = defaultSchedule.filter(item => item.day === dayName && (item.weekType === week || item.weekType === 'both'));
+            const card = document.createElement('div');
+            card.className = 'day-card';
+
+            let itemsHtml = '';
+            if (dayItems.length === 0) {
+                itemsHtml = `<div class="empty-msg">لا توجد محاضرات</div>`;
+            } else {
+                dayItems.forEach(item => {
+                    const st = userStates[item.id] || { att: false, sheet: false, quiz: false };
+                    const badgeClass = item.type === 'محاضرة' ? 'badge-lec' : 'badge-sec';
+                    const modeBadge = item.mode === 'online' 
+                        ? `<span class="badge-mode mode-online">💻 أونلاين</span>` 
+                        : `<span class="badge-mode mode-onsite">🏛️ حضور</span>`;
+
+                    itemsHtml += `
+                        <div class="schedule-item">
+                            <div class="item-header">
+                                <div>
+                                    <div class="item-title">${item.title} <span class="badge ${badgeClass}">${item.type}</span> ${modeBadge}</div>
+                                    <div class="item-meta">⏰ ${item.time} | 📍 ${item.place}</div>
+                                </div>
+                            </div>
+                            <div class="checkboxes-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="chk-attendance" ${st.att ? 'checked' : ''} onchange="updateStatus('${item.id}', 'att')"> حضور
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="chk-sheet" ${st.sheet ? 'checked' : ''} onchange="updateStatus('${item.id}', 'sheet')"> شيت
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="chk-quiz" ${st.quiz ? 'checked' : ''} onchange="updateStatus('${item.id}', 'quiz')"> كويز
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            card.innerHTML = `<div class="day-title">${dayName}</div><div class="item-list">${itemsHtml}</div>`;
+            container.appendChild(card);
+        });
+    }
+
+    function switchWeek(weekType) {
+        document.getElementById('odd-week').classList.toggle('active', weekType === 'odd');
+        document.getElementById('even-week').classList.toggle('active', weekType === 'even');
+        document.querySelectorAll('.sub-tabs .tab-btn').forEach(btn => btn.classList.toggle('active', btn.textContent.includes(weekType === 'odd' ? 'فردي' : 'زوجي')));
+    }
+
+    if (currentUser) {
+        userStates = JSON.parse(localStorage.getItem('userData_' + currentUser)) || {};
+        checkAndResetCycle();
+        showAppScreen();
+    }
+</script>
+
+</body>
+</html>
